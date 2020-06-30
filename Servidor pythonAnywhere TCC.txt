@@ -1,0 +1,226 @@
+from flask import Flask, request
+import sqlite3
+
+app = Flask(__name__)
+
+@app.route('/reload', methods=['POST','GET'])
+def criarbd():
+    conn = sqlite3.connect('o.db')
+    cursor = conn.cursor()
+
+    cursor.execute ("""
+        CREATE TABLE adriano (
+
+        estado VARCHAR(9) NOT NULL,
+        carga VARCHAR(9) NOT NULL
+        );""")
+
+    cursor.execute("""
+        INSERT INTO adriano (estado, carga)
+        VALUES (?,?)
+        """, ('5','Carga1'))
+
+    cursor.execute ("""
+        CREATE TABLE clientes (
+
+        tensao VARCHAR,
+        corrente VARCHAR
+        );""")
+
+    cursor.execute("""
+    INSERT INTO clientes (tensao, corrente)
+    VALUES (?,?)
+    """, ('124','1'))
+
+    conn.commit()
+    conn.close()
+
+@app.route('/upload', methods=['POST','GET'])
+def upar():
+
+    data= request.get_json()
+
+    tensao=data['tensao']
+    corrente=data['corrente']
+
+    if data['corrente'] == '0':
+        estado = 'Desligado'
+
+
+    conn = sqlite3.connect('o.db')
+    cursor = conn.cursor()
+    cursor.execute("""
+    UPDATE clientes
+    SET tensao = ?, corrente = ?
+            """, (tensao, corrente))
+
+    conn.commit()
+
+
+    cursor.execute("""
+    UPDATE adriano
+    SET estado = ?, carga = ?
+            """, (estado, "Carga1"))
+    conn.commit()
+    conn.close()
+
+
+@app.route('/teste', methods=['POST','GET'])
+def criar_monitoramento():
+
+    conn = sqlite3.connect('o.db')
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT * FROM adriano;
+    """)
+
+    texto_retornos = []
+    for linhas in cursor.fetchall():
+        listas = []
+        for items in linhas:
+            listas.append(items)
+    texto_retornos.append(linhas)
+
+    cursor.execute("""
+    SELECT * FROM clientes;
+    """)
+
+    texto_retorno = []
+    for linha in cursor.fetchall():
+        lista = []
+        for item in linha:
+            lista.append(item)
+    texto_retorno.append(linha)
+    conn.close()
+
+    pagina = """<!DOCTYPE html>
+        <html>
+         <title>Valores Obtidos</title>
+
+            <head>
+
+            <meta http-equiv="refresh" content="3" >
+            </head>
+
+                <body style="background-color:black">
+
+                    <div style="border: 2px solid;border-radius: 25px;box-shadow: 10px 10px 5px #00ffff; background-color:#009999">
+                        <h2 style="border: 2px solid;border-radius: 15px;background-color:white;font-size:25px;color:black;text-align:center">Tomada:</h2>
+                            <h1 style="border: 2px solid;border-radius: 15px;background-color:#003333;font-size:25px;color:white;text-align:center">{0}</h1></div>
+
+                    <div style="border: 2px solid;border-radius: 25px;box-shadow: 10px 10px 5px #66ff99; background-color:#009933">
+                        <h2 style="border: 2px solid;border-radius: 15px;background-color:white;font-size:25px;color:black;text-align:center">Estado:</h2>
+                            <h1 style="border: 2px solid;border-radius: 15px;background-color:#003300;font-size:25px;color:white;text-align:center">{1}</h1></div>
+
+                    <div style="border: 2px solid;border-radius: 25px;box-shadow: 10px 10px 5px #4db8ff; background-color:#0047b3">
+                        <h2 style="border: 2px solid;border-radius: 15px;background-color:white;font-size:25px;color:black;text-align:center">Tensão:</h2>
+                            <h1 style="border: 2px solid;border-radius: 15px;background-color:#000066;font-size:25px;color:white;text-align:center">{2}V</h1></div>
+
+                    <div style="border: 2px solid;border-radius: 25px; box-shadow: 10px 10px 5px #ff471a;background-color:#660000">
+                        <h2 style="border: 2px solid;border-radius: 15px;background-color:white;font-size:25px;color:black;text-align:center">Corrente:</h2>
+                            <h1 style="border: 2px solid;border-radius: 15px;background-color:#1a0000;font-size:25px;color:white;text-align:center">{3}A</h1></div>
+
+            </body>
+
+        </html>
+    """.format(texto_retornos[0][1],texto_retornos[0][0],texto_retorno[0][0],texto_retorno[0][1])
+    return  pagina
+
+@app.route('/pegabot', methods=['POST','GET'])
+def pegabot():
+
+    data= request.get_json()
+    estado  = data['estado']
+
+    conn = sqlite3.connect('o.db')
+    cursor = conn.cursor()
+    cursor.execute("""
+    UPDATE adriano
+    SET estado = ?,carga = ?
+            """, (estado,"Carga1"))
+    conn.commit()
+    conn.close()
+
+
+@app.route('/voltadado', methods=['POST','GET'])
+def voltaprowemos():
+
+    conn = sqlite3.connect('o.db')
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT * FROM adriano;
+    """)
+
+    texto_retornos = []
+    for linhas in cursor.fetchall():
+        listas = []
+        for items in linhas:
+            listas.append(items)
+    texto_retornos.append(linhas)
+
+
+    return texto_retornos[0]
+
+    conn.close()
+
+@app.route('/setat', methods=['POST','GET'])
+def setatensao():
+
+        data = request.get_json()
+        tensao = data['tensao']
+        conn = sqlite3.connect('o.db')
+        cursor = conn.cursor()
+        cursor.execute("""
+        SELECT * FROM clientes;
+        """)
+
+        texto_retorno = []
+        for linha in cursor.fetchall():
+         lista = []
+         for item in linha:
+             lista.append(item)
+             texto_retorno.append(linha)
+
+             if float(texto_retorno[0][0]) > float(tensao):
+                 estado = 'Desligado'
+
+                 cursor.execute("""
+                 UPDATE adriano
+                 SET estado = ?,carga = ?
+                 """, (estado,"Carga1"))
+
+        conn.commit()
+        conn.close()
+
+@app.route('/setac', methods=['POST','GET'])
+def setacorrente():
+
+        data = request.get_json()
+        corrente = data['corrente']
+        conn = sqlite3.connect('o.db')
+        cursor = conn.cursor()
+        cursor.execute("""
+        SELECT * FROM clientes;
+        """)
+
+        texto_retorno = []
+        for linha in cursor.fetchall():
+         lista = []
+         for item in linha:
+             lista.append(item)
+             texto_retorno.append(linha)
+
+             if float(texto_retorno[0][1]) > float(corrente):
+                 estado = 'Desligado'
+
+         cursor.execute("""
+         UPDATE adriano
+         SET estado = ?,carga = ?
+         """, (estado,"Carga1"))
+         conn.commit()
+         conn.close()
+
+if __name__ == '__main__':
+    app.run()
