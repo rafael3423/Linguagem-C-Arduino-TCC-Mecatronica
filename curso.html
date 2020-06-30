@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <link rel="stylesheet" href="estilo.css">
+
+</head>
+
+<body>
+    <header>
+        <h1>Fazer Soma do Salário</h1>
+    </header>
+    <section id="sect">
+
+        Função:
+        <input type="radio" name="radiof" id="somar" checked>
+        <label for="somar">Somar</label>
+        <input type="radio" name="radiof" id="subtrair">
+        <label for="subtrair">Subtrair</label>
+        <br>
+
+        <strong>Pagamento</strong>
+        <input type="number" name="numero1" id="n1" min="500">
+        <div id="simbolo">+</div>
+        <strong>Adiantamento</strong>
+        <input type="number" name="numero2" id="n2" min="500">
+
+        <input type="button" value="calcular" id="s">
+
+        <div id="res"></div>
+
+    </section>
+
+    <script src="scriptJS.js"></script>
+
+</body>
+
+</html>
